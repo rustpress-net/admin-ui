@@ -46,6 +46,7 @@ const FooterManager = lazy(() => import('./components/themes/FooterManager'));
 const SidebarManagerComponent = lazy(() => import('./components/themes/SidebarManager'));
 const MenuManager = lazy(() => import('./components/themes/MenuManager'));
 const PageTemplateSelector = lazy(() => import('./components/themes/PageTemplateSelector'));
+const ThemeEditorFull = lazy(() => import('./pages/ThemeEditor'));
 
 // Placeholder pages using new design system (these can be enhanced later)
 import { PageHeader, Card, CardBody, Button, DataTable, Badge, EmptyState, Grid } from './design-system';
@@ -673,7 +674,11 @@ function App() {
           </Suspense>
         } />
         <Route path="widgets" element={<WidgetsPage />} />
-        <Route path="theme-editor" element={<ThemeEditorPage />} />
+        <Route path="theme-editor" element={
+          <Suspense fallback={<PageLoader />}>
+            <ThemeEditorFull />
+          </Suspense>
+        } />
         <Route path="appearance" element={
           <Suspense fallback={<PageLoader />}>
             <Appearance />
