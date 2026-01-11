@@ -469,6 +469,28 @@ const GitPanel: React.FC<GitPanelProps> = ({
 
   return (
     <div className="h-full flex flex-col">
+      {/* Active Theme Notice */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-800 rounded-lg flex items-center justify-center">
+            <Palette className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              Editing Active Theme
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                Live
+              </span>
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              You are editing <strong>{currentTheme.name}</strong> which is currently active on your site.
+              Changes in staging mode won't affect your live site until you publish them.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Tabs */}
       <div className="flex items-center gap-2 mb-6">
         {[
@@ -1614,14 +1636,25 @@ const ThemeEditor: React.FC = () => {
             <h1 className="text-lg font-bold text-gray-900 dark:text-white">Theme Editor</h1>
           </div>
           <span className="text-sm text-gray-500">|</span>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{currentTheme.name}</span>
-            <span className="text-xs text-gray-500">v{currentTheme.version}</span>
+          {/* Active Theme Indicator */}
+          <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                <div className="absolute inset-0 w-3 h-3 bg-green-500 rounded-full animate-ping opacity-75" />
+              </div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-green-700 dark:text-green-400">Active Theme</span>
+            </div>
+            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600" />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-gray-900 dark:text-white">{currentTheme.name}</span>
+              <span className="px-1.5 py-0.5 text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded">v{currentTheme.version}</span>
+            </div>
             {currentTheme.repository?.connected && (
-              <span className="flex items-center gap-1 text-xs text-green-600">
-                <GitBranch className="w-3 h-3" />
-                {currentTheme.currentRef?.name}
-              </span>
+              <div className="flex items-center gap-1 px-2 py-0.5 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                <GitBranch className="w-3 h-3 text-blue-600" />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{currentTheme.currentRef?.name}</span>
+              </div>
             )}
           </div>
         </div>
