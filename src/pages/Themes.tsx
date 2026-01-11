@@ -51,6 +51,16 @@ import {
   ChevronDown,
   ArrowRight,
   Upload,
+  GitBranch,
+  FolderGit2,
+  GitCommit,
+  GitPullRequest,
+  Link,
+  Unlink,
+  Loader2,
+  Package,
+  History,
+  CloudDownload,
 } from 'lucide-react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
@@ -1530,6 +1540,532 @@ const TagFilter: React.FC<TagFilterProps> = ({ allTags, selectedTags, onToggleTa
 };
 
 // ============================================
+// GIT THEMES PANEL - Clone & Manage Git Themes
+// ============================================
+
+interface GitTheme {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  author: string;
+  repository: string;
+  branch: string;
+  lastCommit: string;
+  lastCommitDate: string;
+  thumbnail?: string;
+  isInstalled: boolean;
+  isActive: boolean;
+  tags: string[];
+}
+
+interface GitRepository {
+  url: string;
+  name: string;
+  branch: string;
+  isConnected: boolean;
+  lastFetched?: string;
+  themes: GitTheme[];
+}
+
+interface GitThemesPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onInstallTheme: (theme: GitTheme) => void;
+  onActivateTheme: (theme: GitTheme) => void;
+}
+
+const GitThemesPanel: React.FC<GitThemesPanelProps> = ({
+  isOpen,
+  onClose,
+  onInstallTheme,
+  onActivateTheme,
+}) => {
+  const [repositories, setRepositories] = useState<GitRepository[]>([
+    {
+      url: 'https://github.com/rustpress-net/themes.git',
+      name: 'RustPress Official Themes',
+      branch: 'main',
+      isConnected: true,
+      lastFetched: '2025-01-10 14:30',
+      themes: [
+        {
+          id: 'git-theme-1',
+          name: 'Developer Pro',
+          description: 'A sleek theme for developer portfolios and technical blogs',
+          version: '2.1.0',
+          author: 'RustPress Team',
+          repository: 'https://github.com/rustpress-net/themes.git',
+          branch: 'main',
+          lastCommit: 'a3f2e1b',
+          lastCommitDate: '2025-01-08',
+          thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop',
+          isInstalled: true,
+          isActive: true,
+          tags: ['developer', 'portfolio', 'dark-mode'],
+        },
+        {
+          id: 'git-theme-2',
+          name: 'Starter Clean',
+          description: 'Minimal starter theme with clean design principles',
+          version: '1.5.2',
+          author: 'RustPress Team',
+          repository: 'https://github.com/rustpress-net/themes.git',
+          branch: 'main',
+          lastCommit: 'b7c4d2e',
+          lastCommitDate: '2025-01-05',
+          thumbnail: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&h=600&fit=crop',
+          isInstalled: true,
+          isActive: false,
+          tags: ['minimal', 'starter', 'clean'],
+        },
+        {
+          id: 'git-theme-3',
+          name: 'Business Corporate',
+          description: 'Professional theme for corporate and business websites',
+          version: '3.0.0',
+          author: 'RustPress Team',
+          repository: 'https://github.com/rustpress-net/themes.git',
+          branch: 'main',
+          lastCommit: 'c9d8e3f',
+          lastCommitDate: '2025-01-09',
+          thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=600&fit=crop',
+          isInstalled: false,
+          isActive: false,
+          tags: ['business', 'corporate', 'professional'],
+        },
+      ],
+    },
+  ]);
+
+  const [newRepoUrl, setNewRepoUrl] = useState('');
+  const [newRepoBranch, setNewRepoBranch] = useState('main');
+  const [isCloning, setIsCloning] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  const [selectedRepo, setSelectedRepo] = useState<string | null>(
+    repositories[0]?.url || null
+  );
+  const [activeTab, setActiveTab] = useState<'installed' | 'available' | 'add'>('installed');
+
+  const currentRepo = repositories.find((r) => r.url === selectedRepo);
+
+  const handleAddRepository = async () => {
+    if (!newRepoUrl.trim()) {
+      toast.error('Please enter a repository URL');
+      return;
+    }
+
+    // Check if already added
+    if (repositories.some((r) => r.url === newRepoUrl)) {
+      toast.error('Repository already added');
+      return;
+    }
+
+    setIsCloning(true);
+
+    // Simulate cloning
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const repoName = newRepoUrl.split('/').pop()?.replace('.git', '') || 'Unknown';
+
+    const newRepo: GitRepository = {
+      url: newRepoUrl,
+      name: repoName,
+      branch: newRepoBranch,
+      isConnected: true,
+      lastFetched: new Date().toLocaleString(),
+      themes: [],
+    };
+
+    setRepositories((prev) => [...prev, newRepo]);
+    setNewRepoUrl('');
+    setNewRepoBranch('main');
+    setSelectedRepo(newRepoUrl);
+    setIsCloning(false);
+    setActiveTab('available');
+    toast.success(`Repository "${repoName}" connected successfully!`);
+  };
+
+  const handleFetchUpdates = async () => {
+    if (!currentRepo) return;
+
+    setIsFetching(true);
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    setRepositories((prev) =>
+      prev.map((r) =>
+        r.url === currentRepo.url
+          ? { ...r, lastFetched: new Date().toLocaleString() }
+          : r
+      )
+    );
+
+    setIsFetching(false);
+    toast.success('Repository updated successfully!');
+  };
+
+  const handleRemoveRepository = (url: string) => {
+    setRepositories((prev) => prev.filter((r) => r.url !== url));
+    if (selectedRepo === url) {
+      setSelectedRepo(repositories[0]?.url || null);
+    }
+    toast.success('Repository removed');
+  };
+
+  const installedThemes = currentRepo?.themes.filter((t) => t.isInstalled) || [];
+  const availableThemes = currentRepo?.themes.filter((t) => !t.isInstalled) || [];
+
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-purple-600/10 to-blue-600/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-600 rounded-xl">
+                <FolderGit2 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Git Theme Repositories
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Clone and manage themes from Git repositories
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+        </div>
+
+        {/* Repository Selector */}
+        <div className="px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <select
+                value={selectedRepo || ''}
+                onChange={(e) => setSelectedRepo(e.target.value)}
+                className="px-4 py-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {repositories.map((repo) => (
+                  <option key={repo.url} value={repo.url}>
+                    {repo.name} ({repo.branch})
+                  </option>
+                ))}
+              </select>
+              {currentRepo && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <GitBranch className="w-4 h-4" />
+                  <span>{currentRepo.branch}</span>
+                  {currentRepo.lastFetched && (
+                    <>
+                      <span className="text-gray-300 dark:text-gray-600">•</span>
+                      <Clock className="w-4 h-4" />
+                      <span>Last fetched: {currentRepo.lastFetched}</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleFetchUpdates}
+                disabled={isFetching}
+                className="px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isFetching ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                Fetch Updates
+              </button>
+              {currentRepo && repositories.length > 1 && (
+                <button
+                  onClick={() => handleRemoveRepository(currentRepo.url)}
+                  className="p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                  title="Remove repository"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="px-6 py-3 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-lg w-fit">
+            {[
+              { id: 'installed', label: 'Installed', icon: Package, count: installedThemes.length },
+              { id: 'available', label: 'Available', icon: CloudDownload, count: availableThemes.length },
+              { id: 'add', label: 'Add Repository', icon: Link },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={clsx(
+                  'px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all',
+                  activeTab === tab.id
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                )}
+              >
+                <tab.icon className="w-4 h-4" />
+                {tab.label}
+                {tab.count !== undefined && (
+                  <span className={clsx(
+                    'px-1.5 py-0.5 rounded text-xs',
+                    activeTab === tab.id
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  )}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6">
+          {activeTab === 'add' ? (
+            <div className="max-w-xl mx-auto">
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <GitBranch className="w-5 h-5 text-purple-600" />
+                  Connect Git Repository
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                  Add a Git repository containing RustPress themes. The repository should have a
+                  valid theme manifest in its root directory.
+                </p>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Repository URL
+                    </label>
+                    <input
+                      type="text"
+                      value={newRepoUrl}
+                      onChange={(e) => setNewRepoUrl(e.target.value)}
+                      placeholder="https://github.com/username/themes.git"
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Branch
+                    </label>
+                    <input
+                      type="text"
+                      value={newRepoBranch}
+                      onChange={(e) => setNewRepoBranch(e.target.value)}
+                      placeholder="main"
+                      className="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <button
+                    onClick={handleAddRepository}
+                    disabled={isCloning || !newRepoUrl.trim()}
+                    className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCloning ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Connecting...
+                      </>
+                    ) : (
+                      <>
+                        <Link className="w-5 h-5" />
+                        Connect Repository
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="mt-6 p-4 bg-white/50 dark:bg-gray-800/50 rounded-lg">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Popular Theme Repositories
+                  </h4>
+                  <div className="space-y-2">
+                    {[
+                      { name: 'RustPress Official', url: 'https://github.com/rustpress-net/themes.git' },
+                      { name: 'Community Themes', url: 'https://github.com/rustpress-community/themes.git' },
+                    ].map((repo) => (
+                      <button
+                        key={repo.url}
+                        onClick={() => setNewRepoUrl(repo.url)}
+                        className="w-full px-3 py-2 text-left text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-purple-400 dark:hover:border-purple-600 transition-colors flex items-center justify-between group"
+                      >
+                        <span className="text-gray-700 dark:text-gray-300">{repo.name}</span>
+                        <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-purple-600 transition-colors" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(activeTab === 'installed' ? installedThemes : availableThemes).length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                    {activeTab === 'installed' ? 'No installed themes' : 'No available themes'}
+                  </h3>
+                  <p className="text-gray-500">
+                    {activeTab === 'installed'
+                      ? 'Install themes from the Available tab'
+                      : 'All themes from this repository are installed'}
+                  </p>
+                </div>
+              ) : (
+                (activeTab === 'installed' ? installedThemes : availableThemes).map((theme) => (
+                  <motion.div
+                    key={theme.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-lg transition-all group"
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative aspect-video overflow-hidden">
+                      {theme.thumbnail ? (
+                        <img
+                          src={theme.thumbnail}
+                          alt={theme.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center">
+                          <Palette className="w-12 h-12 text-gray-400" />
+                        </div>
+                      )}
+                      {/* Status badges */}
+                      <div className="absolute top-2 left-2 flex flex-col gap-1">
+                        {theme.isActive && (
+                          <span className="px-2 py-1 bg-green-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
+                            <Check className="w-3 h-3" />
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      {/* Git info overlay */}
+                      <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent p-3">
+                        <div className="flex items-center gap-2 text-xs text-white/80">
+                          <GitCommit className="w-3 h-3" />
+                          <span>{theme.lastCommit}</span>
+                          <span>•</span>
+                          <span>{theme.lastCommitDate}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 dark:text-white">
+                            {theme.name}
+                          </h4>
+                          <p className="text-sm text-gray-500">v{theme.version} by {theme.author}</p>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                        {theme.description}
+                      </p>
+
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {theme.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Actions */}
+                      {theme.isInstalled ? (
+                        theme.isActive ? (
+                          <button className="w-full py-2 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg font-medium flex items-center justify-center gap-2 cursor-default">
+                            <Check className="w-4 h-4" />
+                            Currently Active
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => onActivateTheme(theme)}
+                            className="w-full py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Zap className="w-4 h-4" />
+                            Activate Theme
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          onClick={() => onInstallTheme(theme)}
+                          className="w-full py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-4 h-4" />
+                          Install Theme
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              {repositories.length} repositor{repositories.length === 1 ? 'y' : 'ies'} connected
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// ============================================
 // ENHANCEMENT 7 & 8: VIEW TOGGLE & SORT OPTIONS
 // ============================================
 
@@ -1887,6 +2423,7 @@ export default function Themes() {
   const [showColorCustomizer, setShowColorCustomizer] = useState(false);
   const [showTypographyCustomizer, setShowTypographyCustomizer] = useState(false);
   const [showLayoutBuilder, setShowLayoutBuilder] = useState(false);
+  const [showGitPanel, setShowGitPanel] = useState(false);
   const [themeColors, setThemeColors] = useState({
     primary: '#3B82F6',
     secondary: '#6366F1',
@@ -2076,6 +2613,16 @@ export default function Themes() {
     handlePreview(theme);
   };
 
+  const handleGitThemeInstall = (gitTheme: GitTheme) => {
+    toast.success(`Installing ${gitTheme.name} from Git repository...`);
+    // In production, this would trigger actual git clone/checkout
+  };
+
+  const handleGitThemeActivate = (gitTheme: GitTheme) => {
+    toast.success(`${gitTheme.name} has been activated!`);
+    // In production, this would update the active theme
+  };
+
   const compareThemeObjects = themes.filter(t => compareThemes.includes(t.id));
 
   // Themes formatted for WorkflowTools comparison
@@ -2161,6 +2708,13 @@ export default function Themes() {
               >
                 <Layout className="w-4 h-4" />
                 Layout
+              </button>
+              <button
+                onClick={() => setShowGitPanel(true)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-indigo-700 transition-all flex items-center gap-2"
+              >
+                <FolderGit2 className="w-4 h-4" />
+                Git Repos
               </button>
               <button className="px-4 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors flex items-center gap-2">
                 <Upload className="w-4 h-4" />
@@ -2362,6 +2916,16 @@ export default function Themes() {
             </motion.div>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* Git Themes Panel */}
+      <AnimatePresence>
+        <GitThemesPanel
+          isOpen={showGitPanel}
+          onClose={() => setShowGitPanel(false)}
+          onInstallTheme={handleGitThemeInstall}
+          onActivateTheme={handleGitThemeActivate}
+        />
       </AnimatePresence>
     </div>
     </WorkflowTools>
