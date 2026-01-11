@@ -65,6 +65,7 @@ interface ThemeConfig {
   layout: LayoutConfig;
   templates: TemplateConfig[];
   pages: PageConfig[];
+  assets: ThemeAsset[];
   customCSS: string;
   customJS: string;
 }
@@ -79,6 +80,20 @@ interface PageConfig {
   css: string;
   js: string;
   isModified: boolean;
+}
+
+interface ThemeAsset {
+  id: string;
+  name: string;
+  type: 'image' | 'font' | 'icon' | 'svg' | 'video' | 'audio' | 'document' | 'other';
+  category: 'logo' | 'background' | 'header' | 'footer' | 'icons' | 'fonts' | 'media' | 'other';
+  url: string;
+  thumbnail?: string;
+  size: number;
+  dimensions?: { width: number; height: number };
+  mimeType: string;
+  uploadedAt: string;
+  usedIn: string[];
 }
 
 interface ColorPalette {
@@ -300,6 +315,14 @@ const defaultTheme: ThemeConfig = {
   },
   templates: [],
   pages: defaultPages,
+  assets: [
+    { id: 'logo-1', name: 'logo.svg', type: 'svg', category: 'logo', url: '/themes/developer/assets/logo.svg', size: 2048, mimeType: 'image/svg+xml', uploadedAt: '2025-01-10', usedIn: ['Header', 'Footer'] },
+    { id: 'logo-2', name: 'logo-dark.svg', type: 'svg', category: 'logo', url: '/themes/developer/assets/logo-dark.svg', size: 2156, mimeType: 'image/svg+xml', uploadedAt: '2025-01-10', usedIn: ['Header'] },
+    { id: 'bg-1', name: 'hero-bg.jpg', type: 'image', category: 'background', url: '/themes/developer/assets/hero-bg.jpg', thumbnail: '/themes/developer/assets/hero-bg-thumb.jpg', size: 245760, dimensions: { width: 1920, height: 1080 }, mimeType: 'image/jpeg', uploadedAt: '2025-01-08', usedIn: ['Homepage'] },
+    { id: 'font-1', name: 'Inter-Regular.woff2', type: 'font', category: 'fonts', url: '/themes/developer/assets/fonts/Inter-Regular.woff2', size: 98304, mimeType: 'font/woff2', uploadedAt: '2025-01-05', usedIn: ['Global'] },
+    { id: 'font-2', name: 'Inter-Bold.woff2', type: 'font', category: 'fonts', url: '/themes/developer/assets/fonts/Inter-Bold.woff2', size: 102400, mimeType: 'font/woff2', uploadedAt: '2025-01-05', usedIn: ['Global'] },
+    { id: 'icon-1', name: 'favicon.ico', type: 'icon', category: 'icons', url: '/themes/developer/assets/favicon.ico', size: 4096, mimeType: 'image/x-icon', uploadedAt: '2025-01-05', usedIn: ['Global'] },
+  ],
   customCSS: '',
   customJS: '',
 };
@@ -1505,6 +1528,516 @@ const LivePreview: React.FC<LivePreviewProps> = ({ theme, device, onDeviceChange
 };
 
 // ============================================
+// ASSETS MANAGER COMPONENT
+// ============================================
+
+interface AssetsManagerProps {
+  assets: ThemeAsset[];
+  currentTheme: CurrentTheme;
+  onUpload: (files: FileList) => void;
+  onDelete: (assetId: string) => void;
+  onRename: (assetId: string, newName: string) => void;
+  onReplace: (assetId: string, file: File) => void;
+}
+
+const AssetsManager: React.FC<AssetsManagerProps> = ({
+  assets,
+  currentTheme,
+  onUpload,
+  onDelete,
+  onRename,
+  onReplace,
+}) => {
+  const [selectedCategory, setSelectedCategory] = useState<ThemeAsset['category'] | 'all'>('all');
+  const [selectedType, setSelectedType] = useState<ThemeAsset['type'] | 'all'>('all');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAsset, setSelectedAsset] = useState<ThemeAsset | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const categories: { id: ThemeAsset['category'] | 'all'; label: string; icon: React.ReactNode }[] = [
+    { id: 'all', label: 'All Assets', icon: <Folder className="w-4 h-4" /> },
+    { id: 'logo', label: 'Logos', icon: <Star className="w-4 h-4" /> },
+    { id: 'background', label: 'Backgrounds', icon: <Image className="w-4 h-4" /> },
+    { id: 'header', label: 'Header', icon: <Layout className="w-4 h-4" /> },
+    { id: 'footer', label: 'Footer', icon: <Layout className="w-4 h-4" /> },
+    { id: 'icons', label: 'Icons', icon: <Grid className="w-4 h-4" /> },
+    { id: 'fonts', label: 'Fonts', icon: <Type className="w-4 h-4" /> },
+    { id: 'media', label: 'Media', icon: <Play className="w-4 h-4" /> },
+  ];
+
+  const assetTypes: { id: ThemeAsset['type'] | 'all'; label: string }[] = [
+    { id: 'all', label: 'All Types' },
+    { id: 'image', label: 'Images' },
+    { id: 'svg', label: 'SVG' },
+    { id: 'font', label: 'Fonts' },
+    { id: 'icon', label: 'Icons' },
+    { id: 'video', label: 'Videos' },
+    { id: 'audio', label: 'Audio' },
+  ];
+
+  const filteredAssets = assets.filter(asset => {
+    const matchesCategory = selectedCategory === 'all' || asset.category === selectedCategory;
+    const matchesType = selectedType === 'all' || asset.type === selectedType;
+    const matchesSearch = asset.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesType && matchesSearch;
+  });
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getAssetIcon = (type: ThemeAsset['type']) => {
+    switch (type) {
+      case 'image': return <Image className="w-5 h-5" />;
+      case 'svg': return <FileCode className="w-5 h-5" />;
+      case 'font': return <Type className="w-5 h-5" />;
+      case 'icon': return <Grid className="w-5 h-5" />;
+      case 'video': return <Play className="w-5 h-5" />;
+      case 'audio': return <Activity className="w-5 h-5" />;
+      default: return <File className="w-5 h-5" />;
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (e.dataTransfer.files.length > 0) {
+      onUpload(e.dataTransfer.files);
+    }
+  };
+
+  const totalSize = assets.reduce((sum, a) => sum + a.size, 0);
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Active Theme Assets Notice */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-200 dark:border-purple-800">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-10 h-10 bg-purple-100 dark:bg-purple-800 rounded-lg flex items-center justify-center">
+            <Image className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              Theme Assets
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                {currentTheme.name}
+              </span>
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              Manage images, fonts, icons, and other assets for your active theme. Changes will be reflected in the live preview.
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-medium text-gray-900 dark:text-white">{assets.length} assets</p>
+            <p className="text-xs text-gray-500">{formatFileSize(totalSize)} total</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          {/* Category Filter */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as any)}
+            className="px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+          >
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>{cat.label}</option>
+            ))}
+          </select>
+
+          {/* Type Filter */}
+          <select
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value as any)}
+            className="px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+          >
+            {assetTypes.map(type => (
+              <option key={type.id} value={type.id}>{type.label}</option>
+            ))}
+          </select>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search assets..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg w-64"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* View Mode */}
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={clsx(
+                'p-2 rounded-md transition-colors',
+                viewMode === 'grid' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'text-gray-500'
+              )}
+            >
+              <Grid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={clsx(
+                'p-2 rounded-md transition-colors',
+                viewMode === 'list' ? 'bg-white dark:bg-gray-700 shadow-sm' : 'text-gray-500'
+              )}
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Upload Button */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+          >
+            <Upload className="w-4 h-4" />
+            Upload Assets
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,font/*,.woff,.woff2,.ttf,.otf,.svg,.ico"
+            onChange={(e) => e.target.files && onUpload(e.target.files)}
+            className="hidden"
+          />
+        </div>
+      </div>
+
+      {/* Drop Zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        className={clsx(
+          'flex-1 overflow-auto rounded-xl border-2 border-dashed transition-colors',
+          dragOver
+            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+            : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30'
+        )}
+      >
+        {filteredAssets.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center p-8">
+            <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mb-4">
+              <Image className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No assets found</h3>
+            <p className="text-sm text-gray-500 text-center max-w-md mb-4">
+              {searchQuery || selectedCategory !== 'all' || selectedType !== 'all'
+                ? 'Try adjusting your filters or search query'
+                : 'Upload images, fonts, icons, and other assets for your theme'
+              }
+            </p>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+            >
+              <Upload className="w-4 h-4" />
+              Upload Assets
+            </button>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {filteredAssets.map((asset) => (
+              <div
+                key={asset.id}
+                onClick={() => setSelectedAsset(asset)}
+                className={clsx(
+                  'group relative bg-white dark:bg-gray-800 rounded-xl border overflow-hidden cursor-pointer transition-all hover:shadow-lg',
+                  selectedAsset?.id === asset.id
+                    ? 'border-blue-500 ring-2 ring-blue-500/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300'
+                )}
+              >
+                {/* Preview */}
+                <div className="aspect-square bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                  {asset.type === 'image' || asset.type === 'svg' ? (
+                    <img
+                      src={asset.thumbnail || asset.url}
+                      alt={asset.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '';
+                        (e.target as HTMLImageElement).className = 'hidden';
+                      }}
+                    />
+                  ) : (
+                    <div className="text-gray-400">
+                      {getAssetIcon(asset.type)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="p-3">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{asset.name}</p>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-gray-500">{formatFileSize(asset.size)}</span>
+                    <span className="text-xs px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded capitalize">{asset.type}</span>
+                  </div>
+                </div>
+
+                {/* Actions (on hover) */}
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(asset.url); toast.success('URL copied!'); }}
+                    className="p-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                    title="Copy URL"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(asset.id); }}
+                    className="p-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-md hover:bg-red-50 dark:hover:bg-red-900/20"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                  </button>
+                </div>
+
+                {/* Category Badge */}
+                <div className="absolute top-2 left-2">
+                  <span className="px-2 py-0.5 text-xs font-medium bg-black/50 text-white rounded capitalize backdrop-blur-sm">
+                    {asset.category}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-4">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="pb-3 pl-4">Asset</th>
+                  <th className="pb-3">Type</th>
+                  <th className="pb-3">Category</th>
+                  <th className="pb-3">Size</th>
+                  <th className="pb-3">Used In</th>
+                  <th className="pb-3">Uploaded</th>
+                  <th className="pb-3 pr-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredAssets.map((asset) => (
+                  <tr
+                    key={asset.id}
+                    onClick={() => setSelectedAsset(asset)}
+                    className={clsx(
+                      'hover:bg-white dark:hover:bg-gray-800 cursor-pointer transition-colors',
+                      selectedAsset?.id === asset.id && 'bg-blue-50 dark:bg-blue-900/20'
+                    )}
+                  >
+                    <td className="py-3 pl-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+                          {asset.type === 'image' || asset.type === 'svg' ? (
+                            <img src={asset.thumbnail || asset.url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-gray-400">{getAssetIcon(asset.type)}</span>
+                          )}
+                        </div>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">{asset.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3">
+                      <span className="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded capitalize">{asset.type}</span>
+                    </td>
+                    <td className="py-3">
+                      <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">{asset.category}</span>
+                    </td>
+                    <td className="py-3">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{formatFileSize(asset.size)}</span>
+                    </td>
+                    <td className="py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {asset.usedIn.slice(0, 2).map((loc) => (
+                          <span key={loc} className="px-1.5 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">{loc}</span>
+                        ))}
+                        {asset.usedIn.length > 2 && (
+                          <span className="text-xs text-gray-500">+{asset.usedIn.length - 2}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3">
+                      <span className="text-sm text-gray-500">{asset.uploadedAt}</span>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(asset.url); toast.success('URL copied!'); }}
+                          className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
+                          title="Copy URL"
+                        >
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); window.open(asset.url, '_blank'); }}
+                          className="p-1.5 text-gray-400 hover:text-gray-600 rounded"
+                          title="Open"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onDelete(asset.id); }}
+                          className="p-1.5 text-gray-400 hover:text-red-500 rounded"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Asset Details Sidebar */}
+      <AnimatePresence>
+        {selectedAsset && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="fixed right-0 top-0 bottom-0 w-80 bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 shadow-xl z-50 flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="font-semibold text-gray-900 dark:text-white">Asset Details</h3>
+              <button
+                onClick={() => setSelectedAsset(null)}
+                className="p-1 text-gray-400 hover:text-gray-600 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Preview */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
+                {selectedAsset.type === 'image' || selectedAsset.type === 'svg' ? (
+                  <img src={selectedAsset.url} alt={selectedAsset.name} className="max-w-full max-h-full object-contain" />
+                ) : (
+                  <div className="text-gray-400">
+                    {getAssetIcon(selectedAsset.type)}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Details */}
+            <div className="flex-1 overflow-auto p-4 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={selectedAsset.name}
+                  onChange={(e) => onRename(selectedAsset.id, e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Type</label>
+                  <p className="text-sm text-gray-900 dark:text-white capitalize">{selectedAsset.type}</p>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Category</label>
+                  <p className="text-sm text-gray-900 dark:text-white capitalize">{selectedAsset.category}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Size</label>
+                  <p className="text-sm text-gray-900 dark:text-white">{formatFileSize(selectedAsset.size)}</p>
+                </div>
+                {selectedAsset.dimensions && (
+                  <div>
+                    <label className="block text-xs font-medium text-gray-500 mb-1">Dimensions</label>
+                    <p className="text-sm text-gray-900 dark:text-white">{selectedAsset.dimensions.width} × {selectedAsset.dimensions.height}</p>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">URL</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={selectedAsset.url}
+                    readOnly
+                    className="flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg font-mono text-xs"
+                  />
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(selectedAsset.url); toast.success('Copied!'); }}
+                    className="p-2 text-gray-400 hover:text-gray-600 bg-gray-100 dark:bg-gray-800 rounded-lg"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Used In</label>
+                <div className="flex flex-wrap gap-1">
+                  {selectedAsset.usedIn.map((loc) => (
+                    <span key={loc} className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">{loc}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1">Uploaded</label>
+                <p className="text-sm text-gray-900 dark:text-white">{selectedAsset.uploadedAt}</p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Replace Asset
+              </button>
+              <button
+                onClick={() => { onDelete(selectedAsset.id); setSelectedAsset(null); }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm font-medium rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Asset
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// ============================================
 // MAIN THEME EDITOR COMPONENT
 // ============================================
 
@@ -1605,6 +2138,62 @@ const ThemeEditor: React.FC = () => {
     if (page) {
       addStagingChange({ type: 'config', description: `Deleted page: ${page.name}` });
     }
+  };
+
+  // Asset handlers
+  const handleAssetUpload = (files: FileList) => {
+    Array.from(files).forEach(file => {
+      const newAsset: ThemeAsset = {
+        id: `asset-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        name: file.name,
+        type: file.type.startsWith('image/svg') ? 'svg'
+          : file.type.startsWith('image/') ? 'image'
+          : file.type.startsWith('font/') || file.name.match(/\.(woff2?|ttf|otf|eot)$/) ? 'font'
+          : file.type.startsWith('video/') ? 'video'
+          : file.type.startsWith('audio/') ? 'audio'
+          : 'other',
+        category: 'other',
+        url: URL.createObjectURL(file),
+        size: file.size,
+        mimeType: file.type,
+        uploadedAt: new Date().toISOString().split('T')[0],
+        usedIn: [],
+      };
+      setTheme(prev => ({ ...prev, assets: [...prev.assets, newAsset] }));
+      addStagingChange({ type: 'config', description: `Uploaded asset: ${file.name}` });
+    });
+    toast.success(`Uploaded ${files.length} asset(s)`);
+  };
+
+  const handleAssetDelete = (assetId: string) => {
+    const asset = theme.assets.find(a => a.id === assetId);
+    if (asset && confirm(`Delete "${asset.name}"? This cannot be undone.`)) {
+      setTheme(prev => ({ ...prev, assets: prev.assets.filter(a => a.id !== assetId) }));
+      addStagingChange({ type: 'config', description: `Deleted asset: ${asset.name}` });
+      toast.success('Asset deleted');
+    }
+  };
+
+  const handleAssetRename = (assetId: string, newName: string) => {
+    setTheme(prev => ({
+      ...prev,
+      assets: prev.assets.map(a => a.id === assetId ? { ...a, name: newName } : a)
+    }));
+  };
+
+  const handleAssetReplace = (assetId: string, file: File) => {
+    setTheme(prev => ({
+      ...prev,
+      assets: prev.assets.map(a => a.id === assetId ? {
+        ...a,
+        name: file.name,
+        url: URL.createObjectURL(file),
+        size: file.size,
+        mimeType: file.type,
+        uploadedAt: new Date().toISOString().split('T')[0],
+      } : a)
+    }));
+    toast.success('Asset replaced');
   };
 
   const tabs: { id: EditorTab; label: string; icon: React.FC<any> }[] = [
@@ -1824,6 +2413,17 @@ const ThemeEditor: React.FC = () => {
                     spellCheck={false}
                   />
                 </div>
+              )}
+
+              {activeTab === 'assets' && (
+                <AssetsManager
+                  assets={theme.assets}
+                  currentTheme={currentTheme}
+                  onUpload={handleAssetUpload}
+                  onDelete={handleAssetDelete}
+                  onRename={handleAssetRename}
+                  onReplace={handleAssetReplace}
+                />
               )}
 
               {activeTab === 'git' && (
