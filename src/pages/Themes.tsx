@@ -1591,18 +1591,18 @@ const GitThemesPanel: React.FC<GitThemesPanelProps> = ({
       themes: [
         {
           id: 'git-theme-1',
-          name: 'Developer Pro',
-          description: 'A sleek theme for developer portfolios and technical blogs',
-          version: '2.1.0',
+          name: 'RustPress Enterprise',
+          description: 'The premium enterprise theme for RustPress CMS',
+          version: '2.4.0',
           author: 'RustPress Team',
           repository: 'https://github.com/rustpress-net/themes.git',
           branch: 'main',
           lastCommit: 'a3f2e1b',
           lastCommitDate: '2025-01-08',
-          thumbnail: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&h=600&fit=crop',
+          thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&h=600&fit=crop',
           isInstalled: true,
           isActive: true,
-          tags: ['developer', 'portfolio', 'dark-mode'],
+          tags: ['business', 'corporate', 'enterprise'],
         },
         {
           id: 'git-theme-2',

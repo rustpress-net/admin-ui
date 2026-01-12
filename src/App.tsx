@@ -48,6 +48,12 @@ const MenuManager = lazy(() => import('./components/themes/MenuManager'));
 const PageTemplateSelector = lazy(() => import('./components/themes/PageTemplateSelector'));
 const ThemeEditorFull = lazy(() => import('./pages/ThemeEditor'));
 
+// Appearance Pages
+const AppearanceHeaderManager = lazy(() => import('./pages/appearance/HeaderManager'));
+const AppearanceFooterManager = lazy(() => import('./pages/appearance/FooterManager'));
+const AppearanceSidebarManager = lazy(() => import('./pages/appearance/SidebarManager'));
+const AppearanceDesign = lazy(() => import('./pages/appearance/Design'));
+
 // Placeholder pages using new design system (these can be enhanced later)
 import { PageHeader, Card, CardBody, Button, DataTable, Badge, EmptyState, Grid } from './design-system';
 import { FileText, Folders, Image, MessageSquare, Palette, Package, Users, Settings, Plus, Upload, Eye } from 'lucide-react';
@@ -613,6 +619,17 @@ const APIPage = () => (
 function App() {
   return (
     <Routes>
+      {/* IDE - Full page without layout wrapper - MUST BE BEFORE catch-all route */}
+      <Route path="/ide" element={
+        <Suspense fallback={
+          <div className="h-screen flex items-center justify-center bg-gray-900">
+            <div className="text-white">Loading IDE...</div>
+          </div>
+        }>
+          <ThemeEditorFull />
+        </Suspense>
+      } />
+
       {/* Admin routes with EnterpriseLayout */}
       <Route path="/" element={<EnterpriseLayout />}>
         {/* Dashboard */}
@@ -674,14 +691,25 @@ function App() {
           </Suspense>
         } />
         <Route path="widgets" element={<WidgetsPage />} />
-        <Route path="theme-editor" element={
+        <Route path="appearance" element={<Navigate to="/appearance/header" replace />} />
+        <Route path="appearance/header" element={
           <Suspense fallback={<PageLoader />}>
-            <ThemeEditorFull />
+            <AppearanceHeaderManager />
           </Suspense>
         } />
-        <Route path="appearance" element={
+        <Route path="appearance/footer" element={
           <Suspense fallback={<PageLoader />}>
-            <Appearance />
+            <AppearanceFooterManager />
+          </Suspense>
+        } />
+        <Route path="appearance/sidebar" element={
+          <Suspense fallback={<PageLoader />}>
+            <AppearanceSidebarManager />
+          </Suspense>
+        } />
+        <Route path="appearance/design" element={
+          <Suspense fallback={<PageLoader />}>
+            <AppearanceDesign />
           </Suspense>
         } />
         <Route path="sidebars" element={

@@ -29,6 +29,10 @@ import {
   Layout,
   Folders,
   Clock,
+  PanelLeft,
+  LayoutTemplate,
+  PaintBucket,
+  Code2,
 } from 'lucide-react';
 import {
   ThemeProvider,
@@ -93,8 +97,20 @@ const navigation = [
     title: 'Appearance',
     items: [
       { icon: Palette, iconName: 'Palette', label: 'Themes', href: '/themes' },
-      { icon: Layout, iconName: 'Layout', label: 'Widgets', href: '/widgets' },
-      { icon: Code, iconName: 'Code', label: 'Editor', href: '/theme-editor' },
+      { icon: LayoutTemplate, iconName: 'LayoutTemplate', label: 'Header', href: '/appearance/header' },
+      { icon: Layout, iconName: 'Layout', label: 'Footer', href: '/appearance/footer' },
+      { icon: PanelLeft, iconName: 'PanelLeft', label: 'Sidebar', href: '/appearance/sidebar' },
+      { icon: PaintBucket, iconName: 'PaintBucket', label: 'Design', href: '/appearance/design' },
+    ],
+  },
+  {
+    id: 'development',
+    title: 'Development',
+    items: [
+      { icon: Code2, iconName: 'Code2', label: 'IDE', href: '/ide' },
+      { icon: Code, iconName: 'Code', label: 'Functions', href: '/functions' },
+      { icon: Database, iconName: 'Database', label: 'Database', href: '/database' },
+      { icon: Globe, iconName: 'Globe', label: 'API', href: '/api' },
     ],
   },
   {
@@ -119,15 +135,6 @@ const navigation = [
     items: [
       { icon: BarChart3, iconName: 'BarChart3', label: 'Overview', href: '/analytics' },
       { icon: TrendingUp, iconName: 'TrendingUp', label: 'SEO', href: '/seo' },
-    ],
-  },
-  {
-    id: 'development',
-    title: 'Development',
-    items: [
-      { icon: Code, iconName: 'Code', label: 'Functions', href: '/functions' },
-      { icon: Database, iconName: 'Database', label: 'Database', href: '/database' },
-      { icon: Globe, iconName: 'Globe', label: 'API', href: '/api' },
     ],
   },
   {

@@ -166,14 +166,14 @@ export type { EnhancedDataTableProps, EnhancedColumn } from './EnhancedDataTable
 export { RichTextEditor, SimpleEditor } from './RichTextEditor';
 export type { RichTextEditorProps, EditorFeature, SimpleEditorProps } from './RichTextEditor';
 
-export { FileUpload, FileUploadDropzone, FilePreview, FileUploadButton } from './FileUpload';
-export type { FileUploadProps, UploadedFile, FilePreviewProps, FileUploadDropzoneProps, FileUploadButtonProps } from './FileUpload';
+export { FileUpload, SingleFileUpload } from './FileUpload';
+export type { FileUploadProps, UploadedFile, SingleFileUploadProps } from './FileUpload';
 
-export { MultiSelectComboBox, ComboBoxOption } from './MultiSelectComboBox';
-export type { MultiSelectComboBoxProps, ComboBoxOption as ComboBoxOptionType, ComboBoxGroup } from './MultiSelectComboBox';
+export { MultiSelectComboBox } from './MultiSelectComboBox';
+export type { MultiSelectComboBoxProps, ComboBoxOption } from './MultiSelectComboBox';
 
-export { DateRangePicker, DatePicker, DateTimePicker, CalendarMonth, DateRangePresets } from './DateRangePicker';
-export type { DateRangePickerProps, DateRange, DateRangePreset, DatePickerProps, DateTimePickerProps, CalendarMonthProps } from './DateRangePicker';
+export { DateRangePicker, DatePicker, DateTimePicker } from './DateRangePicker';
+export type { DateRangePickerProps, DateRange, DateRangePreset, DatePickerProps, DateTimePickerProps } from './DateRangePicker';
 
 export { FormWizard, WizardStepContent, CompactStepper, WizardProgressBar, useWizard } from './FormWizard';
 export type { FormWizardProps, WizardStep, CompactStepperProps, WizardProgressBarProps } from './FormWizard';
@@ -188,54 +188,54 @@ export { DynamicFormBuilder, createFormSchema, createTextField, createSelectFiel
 export type { DynamicFormBuilderProps, FormSchema, FormField, FieldType, FieldValidation, FieldOption, ConditionalRule, FieldRenderProps } from './DynamicFormBuilder';
 
 // Interactive & Data Visualization Components
-export { NotificationCenter, NotificationToast, NotificationsList, useNotificationSound } from './NotificationCenter';
+export { NotificationCenter, NotificationToast, NotificationsList } from './NotificationCenter';
 export type { NotificationCenterProps, Notification, NotificationType, NotificationToastProps, NotificationsListProps } from './NotificationCenter';
 
-export { CommentsThread, CommentItem, CommentEditor, ReactionBar, MentionAutocomplete, CommentReplyForm } from './CommentsThread';
-export type { CommentsThreadProps, Comment, CommentAuthor, CommentReaction, CommentItemProps, CommentEditorProps } from './CommentsThread';
+export { CommentsThread } from './CommentsThread';
+export type { CommentsThreadProps, Comment, CommentAuthor, CommentReaction } from './CommentsThread';
 
-export { KanbanBoard, KanbanColumn, KanbanCard, CompactKanban, AddCardForm } from './KanbanBoard';
-export type { KanbanBoardProps, KanbanColumn as KanbanColumnType, KanbanCard as KanbanCardType, KanbanLabel, CompactKanbanProps } from './KanbanBoard';
+export { KanbanBoard, CompactKanban } from './KanbanBoard';
+export type { KanbanBoardProps, KanbanColumn, KanbanCard, KanbanLabel, CompactKanbanProps } from './KanbanBoard';
 
-export { Timeline, TimelineItem, HorizontalTimeline, AlternatingTimeline, SimpleTimeline, ActivityTimelineList } from './Timeline';
-export type { TimelineProps, TimelineItem as TimelineItemType, TimelineItemStatus, HorizontalTimelineProps, SimpleTimelineProps, ActivityTimelineListProps } from './Timeline';
+export { Timeline, SimpleTimeline, ActivityTimelineList } from './Timeline';
+export type { TimelineProps, TimelineItem, TimelineItemStatus, SimpleTimelineProps, ActivityTimelineListProps } from './Timeline';
 
-export { TreeView, TreeNode, FileTree, ExpandableList, useTreeExpand } from './TreeView';
-export type { TreeViewProps, TreeNode as TreeNodeType, FileTreeProps, ExpandableListProps } from './TreeView';
+export { TreeView, FileTree, ExpandableList } from './TreeView';
+export type { TreeViewProps, TreeNode, FileTreeProps, ExpandableListProps } from './TreeView';
 
-export { Accordion, AccordionItemComponent, FAQAccordion, CollapsibleCard, NestedAccordion, ExpandIcon } from './Accordion';
+export { Accordion, FAQAccordion, CollapsibleCard, NestedAccordion } from './Accordion';
 export type { AccordionProps, AccordionItem, FAQItem, FAQAccordionProps, CollapsibleCardProps, NestedAccordionItem, NestedAccordionProps } from './Accordion';
 
-export { StatsOverview, StatCard as StatsStatCard, QuickStatsBar, ComparisonStats, MiniStat, useTrendColor } from './StatsOverview';
-export type { StatsOverviewProps, StatItem, StatsOverviewVariant, QuickStatsBarProps, ComparisonStatsProps, MiniStatProps } from './StatsOverview';
+export { StatsOverview, QuickStatsBar, ComparisonStats } from './StatsOverview';
+export type { StatsOverviewProps, StatItem, QuickStatsBarProps, ComparisonStatsProps } from './StatsOverview';
 
 export { DataCards, ProfileCard, ContentCard, PricingCard, ReviewCard, EventCard } from './DataCards';
-export type { ProfileCardProps, ContentCardProps, PricingCardProps, ReviewCardProps, EventCardProps, PricingFeature } from './DataCards';
+export type { ProfileCardProps, ContentCardProps, PricingCardProps, ReviewCardProps, EventCardProps } from './DataCards';
 
 // Media & Content Components
-export { ImageGallery, Lightbox, GalleryToolbar, SimpleImageGrid, ImageCarousel } from './ImageGallery';
-export type { ImageGalleryProps, GalleryImage, GalleryLayout, LightboxProps, GalleryToolbarProps, SimpleImageGridProps, ImageCarouselProps } from './ImageGallery';
+export { ImageGallery, Lightbox, GalleryToolbar, SimpleImageGrid } from './ImageGallery';
+export type { ImageGalleryProps, GalleryImage, LightboxProps, GalleryToolbarProps, SimpleImageGridProps } from './ImageGallery';
 
-export { VideoPlayer, VideoThumbnail, VideoEmbed, VideoPlaylist } from './VideoPlayer';
-export type { VideoPlayerProps, VideoSource, VideoCaption, VideoThumbnailProps, VideoEmbedProps, VideoPlaylistProps, PlaylistVideo } from './VideoPlayer';
+export { VideoPlayer, VideoThumbnail, VideoEmbed } from './VideoPlayer';
+export type { VideoPlayerProps, VideoSource, VideoCaption, VideoThumbnailProps, VideoEmbedProps } from './VideoPlayer';
 
-export { AudioPlayer, PlaylistPlayer, MiniPlayer, AudioWaveform } from './AudioPlayer';
-export type { AudioPlayerProps, AudioTrack, AudioPlayerVariant, PlaylistPlayerProps, MiniPlayerProps, AudioWaveformProps } from './AudioPlayer';
+export { AudioPlayer, PlaylistPlayer, MiniPlayer } from './AudioPlayer';
+export type { AudioPlayerProps, AudioTrack, PlaylistPlayerProps, MiniPlayerProps } from './AudioPlayer';
 
-export { MediaLibrary, UploadDropzone, FilePicker, FolderTree, FilePreviewModal } from './MediaLibrary';
-export type { MediaLibraryProps, MediaFile, MediaFolder, MediaType, UploadDropzoneProps, FilePickerProps, FolderTreeProps, FilePreviewModalProps } from './MediaLibrary';
+export { MediaLibrary, UploadDropzone, FilePicker } from './MediaLibrary';
+export type { MediaLibraryProps, MediaFile, MediaFolder, MediaType, FilePickerProps } from './MediaLibrary';
 
 export { CodeBlock, InlineCode, CodeGroup, Terminal, CollapsibleCodeBlock } from './CodeBlock';
-export type { CodeBlockProps, SupportedLanguage, CodeTheme, InlineCodeProps, CodeGroupProps, CodeTab, TerminalProps, TerminalLine, CollapsibleCodeBlockProps } from './CodeBlock';
+export type { CodeBlockProps, SupportedLanguage, InlineCodeProps, CodeGroupProps, CodeTab, TerminalProps, TerminalLine, CollapsibleCodeBlockProps } from './CodeBlock';
 
-export { MarkdownPreview, MarkdownEditor, TableOfContents, MarkdownToolbar } from './MarkdownPreview';
-export type { MarkdownPreviewProps, MarkdownEditorProps, TableOfContentsProps, TOCHeading, MarkdownToolbarProps, ToolbarAction } from './MarkdownPreview';
+export { MarkdownPreview, MarkdownEditor, TableOfContents } from './MarkdownPreview';
+export type { MarkdownPreviewProps, MarkdownEditorProps } from './MarkdownPreview';
 
-export { DiffViewer, DiffStats, TextDiff, DiffSummary, FileDiff } from './DiffViewer';
-export type { DiffViewerProps, DiffLine, DiffType, DiffViewMode, DiffStatsProps, TextDiffProps, DiffSummaryProps, FileDiffProps, FileChange } from './DiffViewer';
+export { DiffViewer, DiffStats, TextDiff, DiffSummary } from './DiffViewer';
+export type { DiffViewerProps, DiffLine, DiffType, TextDiffProps, DiffSummaryProps } from './DiffViewer';
 
-export { DocumentViewer, DocumentCard, DocumentList, DocumentToolbar } from './DocumentViewer';
-export type { DocumentViewerProps, DocumentInfo, DocumentCardProps, DocumentListProps, DocumentToolbarProps } from './DocumentViewer';
+export { DocumentViewer, DocumentCard, DocumentList } from './DocumentViewer';
+export type { DocumentViewerProps, DocumentCardProps, DocumentListProps } from './DocumentViewer';
 
 // Advanced UI & Utility Components
 export { Rating, StarRating, HeartRating, ThumbsRating, EmojiRating, NumericRating, RatingBreakdown, RatingSummary, InlineRating, RatingField } from './Rating';
@@ -407,35 +407,35 @@ export { StatusIndicator, ConnectionIndicator, OnlineStatus, OnlineProvider, Pre
 export type { StatusIndicatorProps, ConnectionIndicatorProps, OnlineStatusProps, PresenceIndicatorProps, HealthIndicatorProps, ServerStatusProps, SignalStrengthProps, LiveIndicatorProps, PowerStatusProps, ActivityStatusProps, Status, ConnectionStatus, HealthStatus, ServerStatus as ServerStatusType } from './StatusIndicator';
 
 // Post Editor Enhancements (1-10)
-export { AutoSaveProvider, AutoSaveEditor, AutoSaveStatus as EditorSaveStatus, VersionHistory, VersionListItem, SaveButton, VersionDropdown, UnsavedChangesWarning, useAutoSaveEditor } from './AutoSaveEditor';
-export type { AutoSaveConfig, SavedVersion, AutoSaveProviderProps } from './AutoSaveEditor';
+export { AutoSaveEditor, AutoSaveStatus as EditorAutoSaveStatus, VersionHistory, VersionListItem, SaveButton, VersionDropdown, UnsavedChangesWarning, useAutoSaveEditor } from './AutoSaveEditor';
+export type { AutoSaveConfig, ContentVersion } from './AutoSaveEditor';
 
-export { DistractionFreeProvider, DistractionFreeMode, DistractionFreeToggle, TypewriterMode, FocusModeParagraph, useDistractionFree } from './DistractionFreeMode';
-export type { DistractionFreeSettings, DistractionFreeProviderProps } from './DistractionFreeMode';
+export { DistractionFreeMode, DistractionFreeToggle, TypewriterMode, FocusModeParagraph, useDistractionFree } from './DistractionFreeMode';
+export type { DistractionFreeSettings } from './DistractionFreeMode';
 
 export { ContentStatsDisplay, ReadingTime, WordCount, ReadabilityScore, WritingGoal, ContentStatsDropdown, calculateStats, calculateReadabilityScore } from './ContentStats';
-export type { ContentStatsConfig, ContentStatsData, ContentStatsDisplayProps } from './ContentStats';
+export type { ContentStats, ContentStatsProps } from './ContentStats';
 
-export { AIWritingProvider, AIWritingAssistant, WritingAssistantPanel, AIActionsToolbar, GrammarChecker, ToneSelector, WritingSettings, InlineSuggestionPopup, WritingScore, useAIWriting } from './AIWritingAssistant';
-export type { AIWritingConfig, WritingSuggestion, ToneType, SuggestionType, SuggestionSeverity, AIWritingProviderProps } from './AIWritingAssistant';
+export { AIWritingProvider, WritingAssistantPanel, AIActionsToolbar, GrammarChecker, ToneSelector, WritingSettings, InlineSuggestionPopup, WritingScore, useAIWriting } from './AIWritingAssistant';
+export type { AIWritingConfig, WritingSuggestion, ToneType, SuggestionType, SuggestionSeverity } from './AIWritingAssistant';
 
-export { MarkdownShortcutsProvider, MarkdownShortcuts, MarkdownEditor as MarkdownEditorWithShortcuts, FormattingToolbar, ShortcutHintsPanel, FloatingFormatMenu, MarkdownCheatSheet, AutoConvertSettings, useMarkdownShortcuts, defaultShortcuts } from './MarkdownShortcuts';
-export type { MarkdownShortcutsConfig, ShortcutDefinition, MarkdownAction, MarkdownEditorProps as MarkdownEditorWithShortcutsProps } from './MarkdownShortcuts';
+export { MarkdownShortcutsProvider, MarkdownEditor as MarkdownEditorWithShortcuts, FormattingToolbar, ShortcutHintsPanel, FloatingFormatMenu, MarkdownCheatSheet, AutoConvertSettings, useMarkdownShortcuts } from './MarkdownShortcuts';
+export type { MarkdownShortcutsConfig, ShortcutDefinition, MarkdownAction } from './MarkdownShortcuts';
 
-export { SlashCommandsProvider, SlashCommands, CommandPalette as SlashCommandPalette, SlashCommandInput, CommandBrowser, QuickInsertMenu, AddBlockButton, useSlashCommands, createDefaultCommands } from './SlashCommands';
-export type { SlashCommandsConfig, SlashCommand, CommandCategory, SlashCommandsProviderProps } from './SlashCommands';
+export { SlashCommandsProvider, CommandPalette as SlashCommandPalette, SlashCommandInput, CommandBrowser, QuickInsertMenu, AddBlockButton, useSlashCommands } from './SlashCommands';
+export type { SlashCommandsConfig, SlashCommand, CommandCategory } from './SlashCommands';
 
 export { BlockEditorProvider, BlockEditor, useBlockEditor, BlockCount } from './BlockEditor';
-export type { BlockEditorConfig, Block, BlockType, BlockEditorProviderProps } from './BlockEditor';
+export type { BlockEditorConfig, Block, BlockType } from './BlockEditor';
 
-export { SplitScreenProvider, SplitScreenPreview, SplitScreenLayout, PreviewPanel, PreviewToolbar, LivePreview, MarkdownPreview as SplitMarkdownPreview, ResponsivePreview, PreviewRefresh, FullScreenPreview, PreviewSettings, useSplitScreen, previewDevices } from './SplitScreenPreview';
-export type { SplitScreenConfig, PreviewMode, LayoutMode, SplitOrientation, PreviewDevice, SplitScreenProviderProps } from './SplitScreenPreview';
+export { SplitScreenProvider, SplitScreenLayout, PreviewPanel, PreviewToolbar, LivePreview, MarkdownPreview as SplitMarkdownPreview, ResponsivePreview, PreviewRefresh, FullScreenPreview, PreviewSettings, useSplitScreen, previewDevices } from './SplitScreenPreview';
+export type { SplitScreenConfig, PreviewMode, LayoutMode, SplitOrientation, PreviewDevice } from './SplitScreenPreview';
 
-export { ContentTemplatesProvider, ContentTemplates, TemplatePicker, TemplateCard, TemplateCreator, TemplateModal, StartFromTemplateButton, useContentTemplates, defaultTemplates } from './ContentTemplates';
-export type { ContentTemplatesConfig, ContentTemplate, TemplateBlock, TemplateCategory, ContentTemplatesProviderProps } from './ContentTemplates';
+export { ContentTemplatesProvider, TemplatePicker, TemplateCard, TemplateCreator, TemplateModal, StartFromTemplateButton, useContentTemplates } from './ContentTemplates';
+export type { ContentTemplatesConfig, ContentTemplate, TemplateBlock, TemplateCategory } from './ContentTemplates';
 
-export { InlineCommentingProvider, InlineCommenting, CommentableText, CommentThread, CommentsSidebar, CommentIndicator, ActiveCommentPopover, useInlineCommenting } from './InlineCommenting';
-export type { InlineCommentingConfig, InlineComment, CommentReply, CommentAuthor, CommentStatus, InlineCommentingProviderProps } from './InlineCommenting';
+export { InlineCommentingProvider, CommentableText, CommentThread, CommentsSidebar, CommentIndicator, ActiveCommentPopover, useInlineCommenting } from './InlineCommenting';
+export type { InlineCommentingConfig, InlineComment, CommentReply, CommentAuthor, CommentStatus } from './InlineCommenting';
 
 // Media & Assets Enhancements (11-20)
 export { MediaBrowserProvider, useMediaBrowser, BrowserToolbar, BrowserGrid, BrowserPreviewModal, SelectionSummary, QuickInsertButton, MediaBrowser } from './MediaBrowser';
@@ -456,7 +456,7 @@ export type { FeaturedImageData, FeaturedImageConfig } from './FeaturedImage';
 export { ImageOptimizerProvider, useImageOptimizer, PresetSelector, QualitySlider, FormatSelector, ResizeControls, AdvancedOptions, OptimizationResult, OptimizeButton, ImageOptimizer } from './ImageOptimizer';
 export type { ImageDimensions, ImageFormat, OptimizationPreset, OptimizationSettings, OptimizationResult as OptimizationResultType } from './ImageOptimizer';
 
-export { AltTextAIProvider, useAltTextAI, AltTextInputField, GenerateButton, SuggestionsList, AnalysisDisplay, AltTextSettings, AltTextAI } from './AltTextAI';
+export { AltTextAIProvider, useAltTextAI, AltTextInput as AIAltTextInput, GenerateButton, SuggestionsList, AnalysisDisplay, AltTextSettings, AltTextAI } from './AltTextAI';
 export type { AltTextSuggestion, ImageAnalysis, AltTextConfig } from './AltTextAI';
 
 export { MediaTagsProvider, useMediaTags, TagBadge as MediaTagBadge, TagInput as MediaTagInput, SelectedTags, TagCloud as MediaTagCloud, CollectionCard, CollectionsList, CreateCollectionForm, MediaTags } from './MediaTags';
@@ -516,7 +516,6 @@ export { SocialProvider, useSocialPublishing, AccountSelector, MessageComposer, 
 export type { SocialPlatform, PublishStatus as SocialPublishStatus, SocialAccount, SocialPost, SocialMedia, PostStats, SocialConfig, SocialPublishData } from './SocialPublishing';
 
 export { ContentQueueProvider, useContentQueue, QueueStatsOverview, QueueToolbar, BulkActionsBar, QueueItemRow, QueueList, QueueConfigPanel, AddToQueueForm, UpcomingItems, ContentQueue } from './ContentQueue';
-export type { QueueItem, QueueStats, QueueFilter, QueueConfig } from './ContentQueue';
 
 // Organization & Taxonomy Enhancements (37-42)
 export { CategoryManagerProvider, useCategoryManager, CategoryTreeItem, CategoryTree, CategoryForm, CategoryDetails, CategoryManager } from './CategoryManager';
@@ -535,7 +534,7 @@ export { SeriesManagerProvider, useSeriesManager, SeriesList, SeriesForm, Series
 export type { SeriesStatus, SeriesPost, Series, SeriesConfig } from './SeriesManager';
 
 export { ArchiveOrganizerProvider, useArchiveOrganizer, ArchiveStats, ArchiveToolbar, ArchiveBulkActions, ArchiveItemRow, ArchiveGroupComponent, ArchiveItemCard, ArchiveList, ArchivePagination, ArchiveOrganizer } from './ArchiveOrganizer';
-export type { ArchiveGroupBy, ArchiveViewMode, ContentStatus, ContentType as ArchiveContentType, ArchiveItem, ArchiveGroup, ArchiveStats as ArchiveStatsType, ArchiveConfig, ArchiveFilter } from './ArchiveOrganizer';
+export type { ArchiveGroupBy, ArchiveViewMode, ContentStatus, ContentType as ArchiveContentType, ArchiveItem, ArchiveGroup, ArchiveStats as ArchiveStatsType, ArchiveConfig } from './ArchiveOrganizer';
 
 // Collaboration & Workflow Enhancements (43-50)
 export { UserRolesProvider, useUserRoles, RoleListItem, RoleList, PermissionCheckbox, PermissionCategory, RoleForm, RoleDetails, UserRoles } from './UserRoles';
