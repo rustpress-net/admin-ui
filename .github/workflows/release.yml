@@ -1,0 +1,173 @@
+name: Release
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      version_bump:
+        description: 'Version bump type'
+        required: true
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - release
+          - pre-release
+          - draft
+
+jobs:
+  determine-version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: \${{ steps.version.outputs.new_version }}
+      current_version: \${{ steps.version.outputs.current_version }}
+      should_release: \${{ steps.version.outputs.should_release }}
+      release_type: \${{ steps.version.outputs.release_type }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine version
+        id: version
+        run: |
+          CURRENT_VERSION=\$(node -p "require('./package.json').version")
+          echo "current_version=\$CURRENT_VERSION" >> \$GITHUB_OUTPUT
+
+          LAST_TAG=\$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -z "\$LAST_TAG" ]; then
+            COMMITS=\$(git log --pretty=format:"%s" HEAD)
+          else
+            COMMITS=\$(git log --pretty=format:"%s" \${LAST_TAG}..HEAD)
+          fi
+
+          # Determine release type
+          if [ "\${{ github.event.inputs.release_type }}" != "" ] && [ "\${{ github.event.inputs.release_type }}" != "auto" ]; then
+            RELEASE_TYPE="\${{ github.event.inputs.release_type }}"
+          else
+            if echo "\$COMMITS" | grep -qi "\[release\]"; then
+              RELEASE_TYPE="release"
+            elif echo "\$COMMITS" | grep -qi "\[pre-release\]"; then
+              RELEASE_TYPE="pre-release"
+            elif echo "\$COMMITS" | grep -qi "\[draft\]"; then
+              RELEASE_TYPE="draft"
+            else
+              RELEASE_TYPE="none"
+            fi
+          fi
+          echo "release_type=\$RELEASE_TYPE" >> \$GITHUB_OUTPUT
+
+          # Determine bump type
+          if [ "\${{ github.event.inputs.version_bump }}" != "" ] && [ "\${{ github.event.inputs.version_bump }}" != "auto" ]; then
+            BUMP_TYPE="\${{ github.event.inputs.version_bump }}"
+          else
+            BUMP_TYPE="none"
+            if echo "\$COMMITS" | grep -qiE "^feat"; then
+              BUMP_TYPE="minor"
+            elif echo "\$COMMITS" | grep -qiE "^fix|^perf|^refactor"; then
+              BUMP_TYPE="patch"
+            elif echo "\$COMMITS" | grep -qi "\[major\]"; then
+              BUMP_TYPE="major"
+            elif echo "\$COMMITS" | grep -qi "\[minor\]"; then
+              BUMP_TYPE="minor"
+            elif echo "\$COMMITS" | grep -qi "\[patch\]"; then
+              BUMP_TYPE="patch"
+            fi
+          fi
+
+          if [ "\$RELEASE_TYPE" = "none" ] || [ "\$BUMP_TYPE" = "none" ]; then
+            echo "should_release=false" >> \$GITHUB_OUTPUT
+            echo "new_version=\$CURRENT_VERSION" >> \$GITHUB_OUTPUT
+          else
+            IFS='.' read -r MAJOR MINOR PATCH <<< "\$CURRENT_VERSION"
+            case \$BUMP_TYPE in
+              major) MAJOR=\$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+              minor) MINOR=\$((MINOR + 1)); PATCH=0 ;;
+              patch) PATCH=\$((PATCH + 1)) ;;
+            esac
+            NEW_VERSION="\${MAJOR}.\${MINOR}.\${PATCH}"
+            echo "new_version=\$NEW_VERSION" >> \$GITHUB_OUTPUT
+            echo "should_release=true" >> \$GITHUB_OUTPUT
+          fi
+
+  build-and-release:
+    name: Build and Release
+    needs: determine-version
+    if: needs.determine-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update version
+        run: npm version \${{ needs.determine-version.outputs.new_version }} --no-git-tag-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Create release archive
+        run: |
+          cd dist
+          zip -r ../rustpress-admin-ui-v\${{ needs.determine-version.outputs.new_version }}.zip .
+
+      - name: Create tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v\${{ needs.determine-version.outputs.new_version }}" -m "Release v\${{ needs.determine-version.outputs.new_version }}"
+          git push origin "v\${{ needs.determine-version.outputs.new_version }}"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v\${{ needs.determine-version.outputs.new_version }}
+          name: Admin UI v\${{ needs.determine-version.outputs.new_version }}
+          files: rustpress-admin-ui-v\${{ needs.determine-version.outputs.new_version }}.zip
+          draft: \${{ needs.determine-version.outputs.release_type == 'draft' }}
+          prerelease: \${{ needs.determine-version.outputs.release_type == 'pre-release' }}
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+
+  cleanup:
+    name: Cleanup Old Releases
+    needs: [determine-version, build-and-release]
+    if: needs.determine-version.outputs.release_type == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Delete prereleases and drafts
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const releases = await github.rest.repos.listReleases({ owner, repo, per_page: 100 });
+            for (const release of releases.data) {
+              if (release.prerelease || release.draft) {
+                console.log(\`Deleting: \${release.tag_name}\`);
+                await github.rest.repos.deleteRelease({ owner, repo, release_id: release.id });
+                try {
+                  await github.rest.git.deleteRef({ owner, repo, ref: \`tags/\${release.tag_name}\` });
+                } catch (e) { }
+              }
+            }
