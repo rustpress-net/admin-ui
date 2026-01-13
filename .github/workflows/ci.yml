@@ -2,15 +2,19 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, master, develop]
   pull_request:
-    branches: [main]
+    branches: [main, master]
 
 jobs:
   ci:
-    uses: rustpress-net/rustpress-core-devops/.github/workflows/ci-node.yml@main
-    with:
-      run_tests: true
-      run_lint: true
-      run_build: true
-    secrets: inherit
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: rustpress-net/rustpress-core-devops/actions/ci-node@main
+        with:
+          run_tests: 'true'
+          run_lint: 'true'
+          run_build: 'true'
