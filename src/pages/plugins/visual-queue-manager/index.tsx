@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -24,6 +25,8 @@ import {
   Moon,
   Sun,
   RefreshCw,
+  ArrowLeft,
+  Home,
 } from 'lucide-react';
 import { cn } from '../../../design-system/utils';
 import { useQueueManagerStore } from './stores/queueManagerStore';
@@ -61,6 +64,7 @@ interface NavItem {
 }
 
 export function VisualQueueManager() {
+  const navigate = useNavigate();
   const { initializeSampleData, alerts } = useQueueManagerStore();
 
   const [activeSection, setActiveSection] = useState<NavigationSection>('overview');
@@ -172,15 +176,30 @@ export function VisualQueueManager() {
         animate={{ width: sidebarCollapsed ? 72 : 256 }}
         className="flex flex-col bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800"
       >
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-4 h-16 border-b border-neutral-200 dark:border-neutral-800">
+        {/* Header with Back Button */}
+        <div className="flex items-center gap-2 px-3 h-16 border-b border-neutral-200 dark:border-neutral-800">
+          {/* Back to RustPress Button */}
+          <button
+            onClick={() => navigate('/dashboard')}
+            className={cn(
+              'flex items-center justify-center rounded-lg transition-all',
+              'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white',
+              'hover:bg-neutral-100 dark:hover:bg-neutral-800',
+              sidebarCollapsed ? 'w-10 h-10' : 'w-9 h-9'
+            )}
+            title="Back to RustPress"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
+          {/* Logo */}
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center flex-shrink-0">
             <Layers className="w-5 h-5 text-white" />
           </div>
           {!sidebarCollapsed && (
-            <div>
-              <h1 className="text-sm font-bold text-neutral-900 dark:text-white">Queue Manager</h1>
-              <p className="text-xs text-neutral-500">RabbitMQ Admin</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-sm font-bold text-neutral-900 dark:text-white truncate">Queue Manager</h1>
+              <p className="text-xs text-neutral-500 truncate">RabbitMQ Admin</p>
             </div>
           )}
         </div>

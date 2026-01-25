@@ -48,7 +48,7 @@ const MenuManager = lazy(() => import('./components/themes/MenuManager'));
 const PageTemplateSelector = lazy(() => import('./components/themes/PageTemplateSelector'));
 const ThemeEditorFull = lazy(() => import('./pages/ThemeEditor'));
 const Plugins = lazy(() => import('./pages/Plugins'));
-const VisualQueueManager = lazy(() => import('./pages/plugins/VisualQueueManager'));
+const VisualQueueManager = lazy(() => import('./pages/plugins/visual-queue-manager').then(m => ({ default: m.VisualQueueManager })));
 const DetachedTabWindow = lazy(() => import('./components/ide/DetachedTabWindow'));
 
 // Appearance Pages
@@ -601,6 +601,17 @@ function App() {
         </Suspense>
       } />
 
+      {/* Visual Queue Manager - Full page without layout wrapper */}
+      <Route path="/plugins/visual-queue-manager" element={
+        <Suspense fallback={
+          <div className="h-screen flex items-center justify-center bg-gray-900">
+            <div className="text-white">Loading Queue Manager...</div>
+          </div>
+        }>
+          <VisualQueueManager />
+        </Suspense>
+      } />
+
       {/* Detached IDE Tab - Opens in separate window */}
       <Route path="/ide/detached" element={
         <Suspense fallback={
@@ -773,11 +784,7 @@ function App() {
         {/* Plugins */}
         <Route path="plugins" element={<Plugins />} />
         <Route path="plugins/add" element={<Plugins />} />
-        <Route path="plugins/visual-queue-manager" element={
-          <Suspense fallback={<PageLoader />}>
-            <VisualQueueManager />
-          </Suspense>
-        } />
+{/* Visual Queue Manager moved to fullscreen route outside layout */}
         <Route path="plugins/:pluginSlug" element={
           <Suspense fallback={<PageLoader />}>
             <Plugins />

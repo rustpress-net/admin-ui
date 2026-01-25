@@ -5,7 +5,7 @@
 import React, { useState, useCallback } from 'react';
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '../../../../design-system/utils';
+import { cn } from '../../../../../design-system/utils';
 
 interface SearchInputProps {
   value: string;

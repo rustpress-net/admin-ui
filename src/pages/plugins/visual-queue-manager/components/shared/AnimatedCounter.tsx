@@ -5,7 +5,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useSpring, useTransform } from 'framer-motion';
-import { cn } from '../../../../design-system/utils';
+import { cn } from '../../../../../design-system/utils';
 
 interface AnimatedCounterProps {
   value: number;

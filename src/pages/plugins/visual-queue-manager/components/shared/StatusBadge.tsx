@@ -15,7 +15,7 @@ import {
   Zap,
   Loader2,
 } from 'lucide-react';
-import { cn } from '../../../../design-system/utils';
+import { cn } from '../../../../../design-system/utils';
 import type { QueueState, ConnectionState, AlertSeverity } from '../../types';
 
 // Queue State Badge

@@ -6,7 +6,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, CheckCircle, Info, AlertCircle } from 'lucide-react';
-import { cn } from '../../../../design-system/utils';
+import { cn } from '../../../../../design-system/utils';
 
 interface ModalProps {
   isOpen: boolean;

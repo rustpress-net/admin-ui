@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, ChevronDown, Clock } from 'lucide-react';
-import { cn } from '../../../../design-system/utils';
+import { cn } from '../../../../../design-system/utils';
 import type { TimeRange } from '../../types';
 
 interface TimeRangeSelectorProps {

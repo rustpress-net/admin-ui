@@ -6,7 +6,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Minus, LucideIcon } from 'lucide-react';
-import { cn } from '../../../../design-system/utils';
+import { cn } from '../../../../../design-system/utils';
 import { AnimatedCounter, formatCompactNumber, formatBytes, formatRate } from './AnimatedCounter';
 import { SparklineChart } from './SparklineChart';
 

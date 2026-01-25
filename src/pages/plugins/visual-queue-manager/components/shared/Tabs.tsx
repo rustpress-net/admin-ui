@@ -5,7 +5,7 @@
 
 import React, { useState, createContext, useContext } from 'react';
 import { motion } from 'framer-motion';
-import { cn } from '../../../../design-system/utils';
+import { cn } from '../../../../../design-system/utils';
 
 interface Tab {
   id: string;

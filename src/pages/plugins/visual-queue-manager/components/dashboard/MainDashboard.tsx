@@ -323,34 +323,60 @@ export function MainDashboard() {
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">Top Queues</h3>
-            <span className="text-xs text-neutral-500">by message count</span>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400">by message count</span>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {queues
               .sort((a, b) => b.messagesTotal - a.messagesTotal)
               .slice(0, 5)
-              .map((queue) => (
-                <div key={queue.id} className="flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
-                      {queue.name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 h-2 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full bg-primary-500"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${Math.min((queue.messagesTotal / (queues[0]?.messagesTotal || 1)) * 100, 100)}%` }}
+              .map((queue, index) => {
+                const maxMessages = queues[0]?.messagesTotal || 1;
+                const percentage = Math.min((queue.messagesTotal / maxMessages) * 100, 100);
+                const colors = ['#3b82f6', '#8b5cf6', '#22c55e', '#f59e0b', '#ef4444'];
+                const barColor = colors[index % colors.length];
+
+                return (
+                  <div key={queue.id} className="group">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: barColor }}
                         />
+                        <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100 truncate">
+                          {queue.name}
+                        </p>
                       </div>
-                      <span className="text-xs text-neutral-500 w-16 text-right">
-                        {formatCompactNumber(queue.messagesTotal)}
-                      </span>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="text-sm font-bold text-neutral-900 dark:text-white tabular-nums">
+                          {formatCompactNumber(queue.messagesTotal)}
+                        </span>
+                        <HealthGauge score={queue.healthScore} size={32} />
+                      </div>
+                    </div>
+                    <div className="relative h-3 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                      <motion.div
+                        className="absolute inset-y-0 left-0 rounded-full"
+                        style={{ backgroundColor: barColor }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentage}%` }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                      />
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full opacity-30"
+                        style={{
+                          width: `${percentage}%`,
+                          background: `linear-gradient(90deg, transparent, ${barColor})`,
+                        }}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">
+                      <span>{queue.vhost}</span>
+                      <span>{percentage.toFixed(0)}% of max</span>
                     </div>
                   </div>
-                  <HealthGauge score={queue.healthScore} size={40} />
-                </div>
-              ))}
+                );
+              })}
           </div>
         </motion.div>
 

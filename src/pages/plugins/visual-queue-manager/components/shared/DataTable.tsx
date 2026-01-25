@@ -15,7 +15,7 @@ import {
   MoreVertical,
   Check,
 } from 'lucide-react';
-import { cn } from '../../../../design-system/utils';
+import { cn } from '../../../../../design-system/utils';
 
 export interface Column<T> {
   key: string;
