@@ -1,6 +1,7 @@
 /**
  * RustPress Sidebar Component
  * Collapsible navigation sidebar with animations and search filter
+ * Enhanced with animated colored icons for collapsed state
  */
 
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
@@ -10,6 +11,18 @@ import { ChevronLeft, ChevronDown, Menu, X, Search } from 'lucide-react';
 import { cn } from '../utils';
 import { slideInFromLeft, fadeIn, staggerContainer, staggerItem } from '../animations';
 import { useNavigationStore } from '../../store/navigationStore';
+
+// Animated icon colors for collapsed menu
+const ICON_COLORS = [
+  'from-blue-500 to-cyan-400',
+  'from-purple-500 to-pink-400',
+  'from-emerald-500 to-teal-400',
+  'from-orange-500 to-amber-400',
+  'from-rose-500 to-red-400',
+  'from-indigo-500 to-violet-400',
+  'from-green-500 to-lime-400',
+  'from-fuchsia-500 to-pink-400',
+];
 
 // Sidebar Context
 interface SidebarContextValue {
@@ -334,6 +347,12 @@ export interface SidebarGroupProps {
   className?: string;
   collapsible?: boolean;
   defaultOpen?: boolean;
+  /** Icon to show when sidebar is collapsed */
+  icon?: React.ReactNode;
+  /** Color gradient for collapsed icon */
+  iconColor?: string;
+  /** Index for auto color assignment */
+  colorIndex?: number;
 }
 
 export function SidebarGroup({
@@ -343,9 +362,13 @@ export function SidebarGroup({
   className,
   collapsible = false,
   defaultOpen = true,
+  icon,
+  iconColor,
+  colorIndex = 0,
 }: SidebarGroupProps) {
   const { isCollapsed: sidebarCollapsed } = useSidebar();
   const { isGroupCollapsed, toggleGroupCollapsed } = useNavigationStore();
+  const [isHovered, setIsHovered] = useState(false);
 
   // Use persisted state if id is provided, otherwise use local state
   const [localIsOpen, setLocalIsOpen] = useState(defaultOpen);
@@ -354,6 +377,9 @@ export function SidebarGroup({
   const isPersisted = !!id;
   const isOpen = isPersisted ? !isGroupCollapsed(groupId) : localIsOpen;
 
+  // Get icon color from prop or auto-assign based on index
+  const gradient = iconColor || ICON_COLORS[colorIndex % ICON_COLORS.length];
+
   const handleToggle = () => {
     if (isPersisted) {
       toggleGroupCollapsed(groupId);
@@ -361,6 +387,86 @@ export function SidebarGroup({
       setLocalIsOpen(!localIsOpen);
     }
   };
+
+  // When sidebar is collapsed, show a divider line with optional icon
+  if (sidebarCollapsed && title) {
+    return (
+      <div
+        className={cn('mb-2 relative', className)}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Subtle divider with animated gradient */}
+        <motion.div
+          className="mx-3 mb-2 relative"
+          initial={false}
+        >
+          <motion.div
+            className={cn(
+              'h-px w-full rounded-full',
+              'bg-gradient-to-r',
+              gradient
+            )}
+            animate={{
+              opacity: isHovered ? 0.8 : 0.3,
+              scaleX: isHovered ? 1 : 0.6,
+            }}
+            transition={{ duration: 0.3 }}
+          />
+
+          {/* Group indicator dot */}
+          <motion.div
+            className={cn(
+              'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+              'w-1.5 h-1.5 rounded-full',
+              'bg-gradient-to-br',
+              gradient
+            )}
+            animate={{
+              scale: isHovered ? 1.5 : 1,
+              opacity: isHovered ? 1 : 0.6,
+            }}
+            transition={{ duration: 0.2 }}
+          />
+        </motion.div>
+
+        {/* Tooltip on hover showing group name */}
+        <AnimatePresence>
+          {isHovered && (
+            <motion.div
+              initial={{ opacity: 0, x: -10, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -10, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className={cn(
+                'absolute left-full top-0 ml-4 z-50',
+                'px-3 py-1.5 rounded-lg',
+                'bg-gradient-to-r',
+                gradient,
+                'text-white text-xs font-semibold uppercase tracking-wider',
+                'shadow-lg whitespace-nowrap',
+                'pointer-events-none'
+              )}
+            >
+              {title}
+              {/* Arrow */}
+              <div
+                className={cn(
+                  'absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1',
+                  'w-2 h-2 rotate-45',
+                  'bg-gradient-to-br',
+                  gradient
+                )}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Items */}
+        <div className="space-y-1">{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn('mb-6', className)}>
@@ -426,6 +532,10 @@ export interface SidebarItemProps {
   badge?: React.ReactNode;
   children?: React.ReactNode;
   className?: string;
+  /** Color gradient for collapsed icon animation (e.g., 'from-blue-500 to-cyan-400') */
+  iconColor?: string;
+  /** Index for auto color assignment */
+  colorIndex?: number;
 }
 
 export function SidebarItem({
@@ -437,10 +547,16 @@ export function SidebarItem({
   badge,
   children,
   className,
+  iconColor,
+  colorIndex = 0,
 }: SidebarItemProps) {
   const { isCollapsed, closeMobile } = useSidebar();
   const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const hasSubMenu = !!children;
+
+  // Get icon color from prop or auto-assign based on index
+  const gradient = iconColor || ICON_COLORS[colorIndex % ICON_COLORS.length];
 
   const handleClick = () => {
     if (hasSubMenu) {
@@ -472,13 +588,76 @@ export function SidebarItem({
           'hover:text-neutral-900 dark:hover:text-white',
         ],
 
-    isCollapsed && 'justify-center px-2',
+    isCollapsed && 'justify-center px-2 relative group',
     className
+  );
+
+  // Animated icon wrapper for collapsed state
+  const CollapsedIcon = () => (
+    <motion.div
+      className="relative"
+      whileHover={{ scale: 1.15 }}
+      whileTap={{ scale: 0.95 }}
+    >
+      {/* Gradient background glow */}
+      <motion.div
+        className={cn(
+          'absolute inset-0 rounded-lg bg-gradient-to-br opacity-0',
+          gradient
+        )}
+        animate={{
+          opacity: isHovered || isActive ? 0.2 : 0,
+          scale: isHovered || isActive ? 1.5 : 1,
+        }}
+        transition={{ duration: 0.3 }}
+      />
+
+      {/* Icon with animated gradient */}
+      <motion.div
+        className={cn(
+          'relative w-6 h-6 flex items-center justify-center rounded-lg',
+          'transition-all duration-300',
+          isActive || isHovered
+            ? `bg-gradient-to-br ${gradient} text-white shadow-lg`
+            : 'text-neutral-500 dark:text-neutral-400'
+        )}
+        animate={{
+          rotate: isHovered ? [0, -10, 10, -5, 5, 0] : 0,
+        }}
+        transition={{
+          duration: 0.5,
+          ease: 'easeInOut',
+        }}
+      >
+        <span className="w-4 h-4">{icon}</span>
+      </motion.div>
+
+      {/* Pulse animation ring for active items */}
+      {isActive && (
+        <motion.div
+          className={cn(
+            'absolute inset-0 rounded-lg bg-gradient-to-br',
+            gradient
+          )}
+          animate={{
+            scale: [1, 1.4, 1],
+            opacity: [0.4, 0, 0.4],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      )}
+    </motion.div>
   );
 
   const itemContent = (
     <>
-      {icon && (
+      {icon && isCollapsed ? (
+        <CollapsedIcon />
+      ) : icon && (
         <span
           className={cn(
             'flex-shrink-0 w-5 h-5',
@@ -515,11 +694,46 @@ export function SidebarItem({
           <ChevronDown className="w-4 h-4 text-neutral-400" />
         </motion.div>
       )}
+
+      {/* Tooltip for collapsed state */}
+      {isCollapsed && (
+        <AnimatePresence>
+          {isHovered && (
+            <motion.div
+              initial={{ opacity: 0, x: -10, scale: 0.95 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -10, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              className={cn(
+                'absolute left-full ml-3 z-50',
+                'px-3 py-2 rounded-lg',
+                'bg-neutral-900 dark:bg-white',
+                'text-white dark:text-neutral-900',
+                'text-sm font-medium whitespace-nowrap',
+                'shadow-xl',
+                'pointer-events-none'
+              )}
+            >
+              {label}
+              {badge && (
+                <span className="ml-2 px-1.5 py-0.5 text-xs bg-primary-500 text-white rounded">
+                  {typeof badge === 'object' && 'props' in badge ? (badge as any).props.children : badge}
+                </span>
+              )}
+              {/* Arrow */}
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 bg-neutral-900 dark:bg-white rotate-45" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
     </>
   );
 
   return (
-    <div>
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {isLink ? (
         <Link
           to={href}

@@ -289,21 +289,23 @@ export function EnterpriseLayout() {
 
                 {/* Navigation */}
                 <SidebarContent>
-                  {filteredNavigation.map((group) => (
+                  {filteredNavigation.map((group, groupIndex) => (
                     <SidebarGroup
                       key={group.id}
                       id={group.id}
                       title={group.title}
                       collapsible
                       defaultOpen
+                      colorIndex={groupIndex}
                     >
-                      {group.items.map((item) => (
+                      {group.items.map((item, itemIndex) => (
                         <SidebarItem
                           key={item.href}
                           icon={<item.icon className="w-5 h-5" />}
                           label={item.label}
                           href={item.href}
                           isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
+                          colorIndex={groupIndex * 10 + itemIndex}
                           badge={
                             item.badge ? (
                               <Badge variant="primary" size="xs">
