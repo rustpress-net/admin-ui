@@ -31,7 +31,7 @@ import { TimeRangeSelector } from '../shared/TimeRangeSelector';
 import type { TimeRange } from '../../types';
 
 export function LiveMetricsDashboard() {
-  const { queues, exchanges, connections, consumers, metrics } = useQueueManagerStore();
+  const { queues, exchanges, connections, consumers, systemMetrics } = useQueueManagerStore();
 
   const [isLive, setIsLive] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>('1h');

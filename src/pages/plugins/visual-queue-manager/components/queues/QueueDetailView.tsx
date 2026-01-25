@@ -179,7 +179,7 @@ export function QueueDetailView({ queueId, onClose }: QueueDetailViewProps) {
       onClose={onClose}
       title={queue.name}
       description={`${queue.type} queue in ${queue.vhost}`}
-      size="xl"
+      size="half"
       footer={
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

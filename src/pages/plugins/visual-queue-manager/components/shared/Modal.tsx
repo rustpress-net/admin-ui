@@ -209,7 +209,7 @@ interface SlideOverProps {
   title?: string;
   description?: string;
   position?: 'left' | 'right';
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'half' | '2xl';
   children: React.ReactNode;
   footer?: React.ReactNode;
 }
@@ -229,6 +229,8 @@ export function SlideOver({
     md: 'max-w-md',
     lg: 'max-w-lg',
     xl: 'max-w-xl',
+    '2xl': 'max-w-2xl',
+    half: 'w-1/2',
   };
 
   return (

@@ -74,46 +74,57 @@ export function TopologyGraph({ className }: TopologyGraphProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-  // Calculate node positions
+  // Calculate node positions with better layout
   const { nodes, edges } = useMemo(() => {
     const nodeList: Node[] = [];
     const edgeList: Edge[] = [];
 
-    // Position exchanges on the left
+    // Position exchanges on the left with more spacing
     exchanges.forEach((exchange, index) => {
       if (filterType === 'queue') return;
       nodeList.push({
         id: exchange.id,
         type: 'exchange',
         name: exchange.name,
-        x: 150,
-        y: 100 + index * 120,
+        x: 200,
+        y: 120 + index * 140,
         data: exchange,
       });
     });
 
-    // Position queues on the right
+    // Position queues on the right with more spacing
     queues.forEach((queue, index) => {
       if (filterType === 'exchange') return;
       nodeList.push({
         id: queue.id,
         type: 'queue',
         name: queue.name,
-        x: 550,
-        y: 100 + index * 100,
+        x: 650,
+        y: 100 + index * 110,
         data: queue,
       });
     });
 
-    // Create edges from bindings
+    // Create edges from bindings - match by name OR id
     bindings.forEach((binding) => {
-      const sourceNode = nodeList.find(n => n.id === binding.source);
-      const targetNode = nodeList.find(n => n.id === binding.destination);
+      // Find source by id OR name (for compatibility)
+      const sourceNode = nodeList.find(n =>
+        n.id === binding.source ||
+        n.name === binding.source ||
+        (n.type === 'exchange' && (n.data as Exchange).name === binding.source)
+      );
+      // Find target by id OR name (for compatibility)
+      const targetNode = nodeList.find(n =>
+        n.id === binding.destination ||
+        n.name === binding.destination ||
+        (n.type === 'queue' && (n.data as Queue).name === binding.destination)
+      );
+
       if (sourceNode && targetNode) {
         edgeList.push({
           id: binding.id,
-          source: binding.source,
-          target: binding.destination,
+          source: sourceNode.id,
+          target: targetNode.id,
           routingKey: binding.routingKey,
         });
       }
@@ -156,14 +167,26 @@ export function TopologyGraph({ className }: TopologyGraphProps) {
     const source = getNodePosition(edge.source);
     const target = getNodePosition(edge.target);
 
-    // Calculate control points for curved path
-    const midX = (source.x + target.x) / 2;
-    const path = `M ${source.x + 60} ${source.y} C ${midX} ${source.y}, ${midX} ${target.y}, ${target.x - 60} ${target.y}`;
+    // Calculate control points for curved path with better offsets
+    const sourceX = source.x + 70;  // Exit from right side of exchange
+    const targetX = target.x - 75;  // Enter to left side of queue
+    const midX = (sourceX + targetX) / 2;
+    const path = `M ${sourceX} ${source.y} C ${midX} ${source.y}, ${midX} ${target.y}, ${targetX} ${target.y}`;
 
     const isSelected = selectedNode === edge.source || selectedNode === edge.target;
 
     return (
       <g key={edge.id}>
+        {/* Edge glow for selected */}
+        {isSelected && (
+          <path
+            d={path}
+            fill="none"
+            className="stroke-primary-300 dark:stroke-primary-700"
+            strokeWidth="8"
+            opacity="0.4"
+          />
+        )}
         {/* Edge path */}
         <path
           d={path}
@@ -171,21 +194,33 @@ export function TopologyGraph({ className }: TopologyGraphProps) {
           className={cn(
             'transition-all',
             isSelected
-              ? 'stroke-primary-500 stroke-2'
-              : 'stroke-neutral-300 dark:stroke-neutral-600 stroke-1'
+              ? 'stroke-primary-500'
+              : 'stroke-neutral-400 dark:stroke-neutral-500'
           )}
+          strokeWidth={isSelected ? 3 : 2}
+          strokeDasharray={isSelected ? '' : '5,5'}
           markerEnd="url(#arrowhead)"
         />
-        {/* Routing key label */}
+        {/* Routing key label with background */}
         {showLabels && edge.routingKey && (
-          <text
-            x={midX}
-            y={(source.y + target.y) / 2 - 8}
-            textAnchor="middle"
-            className="text-xs fill-neutral-500 dark:fill-neutral-400"
-          >
-            {edge.routingKey}
-          </text>
+          <>
+            <rect
+              x={midX - 40}
+              y={(source.y + target.y) / 2 - 18}
+              width="80"
+              height="20"
+              rx="4"
+              className="fill-white dark:fill-neutral-800 stroke-neutral-200 dark:stroke-neutral-700"
+            />
+            <text
+              x={midX}
+              y={(source.y + target.y) / 2 - 4}
+              textAnchor="middle"
+              className="text-xs font-medium fill-neutral-600 dark:fill-neutral-300"
+            >
+              {edge.routingKey.length > 12 ? `${edge.routingKey.slice(0, 12)}...` : edge.routingKey}
+            </text>
+          </>
         )}
       </g>
     );
@@ -199,46 +234,61 @@ export function TopologyGraph({ className }: TopologyGraphProps) {
     return (
       <g
         key={node.id}
-        transform={`translate(${node.x - 60}, ${node.y - 30})`}
+        transform={`translate(${node.x - 70}, ${node.y - 35})`}
         onClick={() => setSelectedNode(isSelected ? null : node.id)}
         className="cursor-pointer"
       >
+        {/* Shadow */}
+        <polygon
+          points="70,5 140,40 70,75 0,40"
+          className="fill-neutral-300/50 dark:fill-neutral-700/50"
+        />
         {/* Node shape - Diamond for exchange */}
         <motion.polygon
-          points="60,0 120,30 60,60 0,30"
+          points="70,0 140,35 70,70 0,35"
           className={cn(colors.bg, colors.border, 'stroke-2 transition-all')}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{
-            scale: isSelected ? 1.1 : 1,
+            scale: isSelected ? 1.05 : 1,
             opacity: 1,
           }}
+          style={{ filter: isSelected ? 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.5))' : 'none' }}
         />
         {/* Icon */}
-        <foreignObject x="45" y="15" width="30" height="30">
+        <foreignObject x="50" y="18" width="40" height="40">
           <div className={cn('flex items-center justify-center', colors.text)}>
             {exchangeTypeIcons[exchange.type]}
           </div>
         </foreignObject>
-        {/* Label */}
+        {/* Label below node */}
         {showLabels && (
-          <text
-            x="60"
-            y="75"
-            textAnchor="middle"
-            className="text-xs font-medium fill-neutral-700 dark:fill-neutral-300"
-          >
-            {node.name.length > 15 ? `${node.name.slice(0, 15)}...` : node.name}
-          </text>
+          <>
+            <rect
+              x="10"
+              y="78"
+              width="120"
+              height="28"
+              rx="6"
+              className="fill-white dark:fill-neutral-800 stroke-neutral-200 dark:stroke-neutral-700"
+            />
+            <text
+              x="70"
+              y="92"
+              textAnchor="middle"
+              className="text-xs font-semibold fill-neutral-800 dark:fill-neutral-100"
+            >
+              {node.name.length > 14 ? `${node.name.slice(0, 14)}...` : node.name}
+            </text>
+            <text
+              x="70"
+              y="103"
+              textAnchor="middle"
+              className="text-[10px] fill-neutral-500 capitalize"
+            >
+              {exchange.type} exchange
+            </text>
+          </>
         )}
-        {/* Type badge */}
-        <text
-          x="60"
-          y="88"
-          textAnchor="middle"
-          className="text-[10px] fill-neutral-500 capitalize"
-        >
-          {exchange.type}
-        </text>
       </g>
     );
   };
@@ -246,60 +296,78 @@ export function TopologyGraph({ className }: TopologyGraphProps) {
   const renderQueueNode = (node: Node) => {
     const queue = node.data as Queue;
     const isSelected = selectedNode === node.id;
+    const healthColor = queue.healthScore >= 80 ? 'stroke-green-500' : queue.healthScore >= 50 ? 'stroke-yellow-500' : 'stroke-red-500';
 
     return (
       <g
         key={node.id}
-        transform={`translate(${node.x - 60}, ${node.y - 25})`}
+        transform={`translate(${node.x - 75}, ${node.y - 35})`}
         onClick={() => setSelectedNode(isSelected ? null : node.id)}
         className="cursor-pointer"
       >
+        {/* Shadow */}
+        <rect
+          x="4"
+          y="4"
+          width="150"
+          height="70"
+          rx="12"
+          className="fill-neutral-300/50 dark:fill-neutral-700/50"
+        />
         {/* Node shape - Rectangle for queue */}
         <motion.rect
-          width="120"
-          height="50"
-          rx="8"
+          width="150"
+          height="70"
+          rx="12"
           className={cn(
-            'fill-primary-100 dark:fill-primary-900/30 stroke-primary-500 stroke-2 transition-all'
+            'fill-white dark:fill-neutral-800 stroke-2 transition-all',
+            isSelected ? 'stroke-primary-500' : 'stroke-primary-300 dark:stroke-primary-700'
           )}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{
-            scale: isSelected ? 1.1 : 1,
+            scale: isSelected ? 1.05 : 1,
             opacity: 1,
           }}
+          style={{ filter: isSelected ? 'drop-shadow(0 0 10px rgba(59, 130, 246, 0.5))' : 'none' }}
+        />
+        {/* Health indicator bar */}
+        <rect
+          x="0"
+          y="0"
+          width="6"
+          height="70"
+          rx="3"
+          className={cn('transition-colors', healthColor.replace('stroke-', 'fill-'))}
         />
         {/* Icon */}
-        <foreignObject x="10" y="12" width="24" height="24">
-          <div className="flex items-center justify-center text-primary-600">
-            <Layers className="w-5 h-5" />
+        <foreignObject x="16" y="12" width="28" height="28">
+          <div className="flex items-center justify-center text-primary-600 dark:text-primary-400">
+            <Layers className="w-6 h-6" />
           </div>
         </foreignObject>
-        {/* Queue info */}
+        {/* Queue name */}
         <text
-          x="40"
-          y="22"
-          className="text-xs font-medium fill-neutral-700 dark:fill-neutral-300"
+          x="50"
+          y="26"
+          className="text-sm font-semibold fill-neutral-800 dark:fill-neutral-100"
         >
-          {node.name.length > 12 ? `${node.name.slice(0, 12)}...` : node.name}
+          {node.name.length > 14 ? `${node.name.slice(0, 14)}...` : node.name}
+        </text>
+        {/* Stats row */}
+        <text
+          x="50"
+          y="44"
+          className="text-xs fill-neutral-600 dark:fill-neutral-300"
+        >
+          {queue.messagesTotal.toLocaleString()} messages
         </text>
         <text
-          x="40"
-          y="38"
+          x="50"
+          y="58"
           className="text-[10px] fill-neutral-500"
         >
-          {queue.messagesTotal} msgs • {queue.consumers} cons
+          {queue.consumers} consumers • {queue.type}
         </text>
-        {/* Label below */}
-        {showLabels && (
-          <text
-            x="60"
-            y="65"
-            textAnchor="middle"
-            className="text-[10px] fill-neutral-500 capitalize"
-          >
-            {queue.type} queue
-          </text>
-        )}
       </g>
     );
   };

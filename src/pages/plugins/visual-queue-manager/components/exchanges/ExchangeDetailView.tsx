@@ -101,7 +101,7 @@ export function ExchangeDetailView({ exchangeId, onClose }: ExchangeDetailViewPr
   ];
 
   return (
-    <SlideOver isOpen={true} onClose={onClose} position="right" size="lg">
+    <SlideOver isOpen={true} onClose={onClose} position="right" size="half">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-neutral-200 dark:border-neutral-800">
         <div className="flex items-center gap-4">
